@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Family Holiday Calendar</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f4f6fb;
+      color: #222;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4f7cff, #8a5cff);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 26px;
+    }
+
+    header p {
+      margin: 8px 0 0;
+      font-size: 14px;
+      opacity: 0.95;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .calendar-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 15px;
+      background: #4f7cff;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .danger {
+      background: #d9534f;
+    }
+
+    .secondary {
+      background: #666;
+    }
+
+    .month-title {
+      font-size: 22px;
+      font-weight: bold;
+      text-align: center;
+      flex: 1;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .day-name {
+      text-align: center;
+      font-weight: bold;
+      padding: 8px 0;
+      color: #555;
+      font-size: 13px;
+    }
+
+    .day {
+      background: #f7f8fc;
+      min-height: 95px;
+      border-radius: 10px;
+      padding: 6px;
+      font-size: 13px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .empty {
+      background: transparent;
+    }
+
+    .date-number {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .today {
+      outline: 3px solid #4f7cff;
+      background: #eef3ff;
+    }
+
+    .event {
+      font-size: 11px;
+      margin-top: 4px;
+      padding: 3px 5px;
+      border-radius: 6px;
+      line-height: 1.2;
+    }
+
+    .holiday {
+      background: #ffe7a3;
+    }
+
+    .birthday {
+      background: #ffd6ec;
+    }
+
+    form {
+      display: grid;
+      gap: 10px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 11px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .birthday-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .birthday-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: #f7f8fc;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .birthday-item span {
+      font-size: 14px;
+    }
+
+    .small-btn {
+      padding: 7px 10px;
+      font-size: 12px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .legend-box {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 650px) {
+      .day {
+        min-height: 85px;
+        font-size: 12px;
+        padding: 5px;
+      }
+
+      .event {
+        font-size: 10px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .calendar-controls {
+        flex-wrap: wrap;
+      }
+
+      .month-title {
+        order: -1;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Family Holiday Calendar</h1>
+    <p>U.S. holidays + family birthdays</p>
+  </header>
+
+  <div class="container">
+
+    <div class="card">
+      <div class="calendar-controls">
+        <button onclick="changeMonth(-1)">← Previous</button>
+        <div class="month-title" id="monthTitle"></div>
+        <button onclick="changeMonth(1)">Next →</button>
+      </div>
+
+      <div class="calendar-grid" id="dayNames"></div>
+      <div class="calendar-grid" id="calendar"></div>
+
+      <div class="legend">
+        <span><span class="legend-box holiday"></span>Holiday</span>
+        <span><span class="legend-box birthday"></span>Birthday</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Add Family Birthday</h2>
+
+      <form id="birthdayForm">
+        <input type="text" id="birthdayName" placeholder="Family member's name" required />
+
+        <div class="form-row">
+          <select id="birthdayMonth" required>
+            <option value="">Month</option>
+          </select>
+
+          <select id="birthdayDay" required>
+            <option value="">Day</option>
+          </select>
+
+          <input type="number" id="birthdayYear" placeholder="Year optional" min="1900" max="2100" />
+        </div>
+
+        <button type="submit">Save Birthday</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Saved Birthdays</h2>
+      <div id="birthdayList" class="birthday-list"></div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentDate = new Date();
+    let birthdays = JSON.parse(localStorage.getItem("familyBirthdays")) || [];
+
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    const dayNamesContainer = document.getElementById("dayNames");
+    const calendar = document.getElementById("calendar");
+    const monthTitle = document.getElementById("monthTitle");
+    const birthdayForm = document.getElementById("birthdayForm");
+    const birthdayList = document.getElementById("birthdayList");
+    const birthdayMonth = document.getElementById("birthdayMonth");
+    const birthdayDay = document.getElementById("birthdayDay");
+
+    dayNames.forEach(day => {
+      const div = document.createElement("div");
+      div.className = "day-name";
+      div.textContent = day;
+      dayNamesContainer.appendChild(div);
+    });
+
+    monthNames.forEach((month, index) => {
+      const option = document.createElement("option");
+      option.value = index;
+      option.textContent = month;
+      birthdayMonth.appendChild(option);
+    });
+
+    for (let i = 1; i <= 31; i++) {
+      const option = document.createElement("option");
+      option.value = i;
+      option.textContent = i;
+      birthdayDay.appendChild(option);
+    }
+
+    function saveBirthdays() {
+      localStorage.setItem("familyBirthdays", JSON.stringify(birthdays));
+    }
+
+    function changeMonth(direction) {
+      currentDate.setMonth(currentDate.getMonth() + direction);
+      renderCalendar();
+    }
+
+    function getNthWeekday(year, month, weekday, nth) {
+      let date = new Date(year, month, 1);
+      let count = 0;
+
+      while (date.getMonth() === month) {
+        if (date.getDay() === weekday) {
+          count++;
+          if (count === nth) return date.getDate();
+        }
+        date.setDate(date.getDate() + 1);
+      }
+      return null;
+    }
+
+    function getLastWeekday(year, month, weekday) {
+      let date = new Date(year, month + 1, 0);
+
+      while (date.getDay() !== weekday) {
+        date.setDate(date.getDate() - 1);
+      }
+
+      return date.getDate();
+    }
+
+    function getUSFederalHolidays(year) {
+      return [
+        { name: "New Year's Day", month: 0, day: 1 },
+        { name: "Martin Luther King Jr. Day", month: 0, day: getNthWeekday(year, 0, 1, 3) },
+        { name: "Presidents' Day", month: 1, day: getNthWeekday(year, 1, 1, 3) },
+        { name: "Memorial Day", month: 4, day: getLastWeekday(year, 4, 1) },
+        { name: "Juneteenth", month: 5, day: 19 },
+        { name: "Independence Day", month: 6, day: 4 },
+        { name: "Labor Day", month: 8, day: getNthWeekday(year, 8, 1, 1) },
+        { name: "Columbus Day / Indigenous Peoples' Day", month: 9, day: getNthWeekday(year, 9, 1, 2) },
+        { name: "Veterans Day", month: 10, day: 11 },
+        { name: "Thanksgiving Day", month: 10, day: getNthWeekday(year, 10, 4, 4) },
+        { name: "Christmas Day", month: 11, day: 25 }
+      ];
+    }
+
+    function getExtraUSPopularHolidays(year) {
+      return [
+        { name: "Valentine's Day", month: 1, day: 14 },
+        { name: "St. Patrick's Day", month: 2, day: 17 },
+        { name: "Mother's Day", month: 4, day: getNthWeekday(year, 4, 0, 2) },
+        { name: "Father's Day", month: 5, day: getNthWeekday(year, 5, 0, 3) },
+        { name: "Halloween", month: 9, day: 31 },
+        { name: "Christmas Eve", month: 11, day: 24 },
+        { name: "New Year's Eve", month: 11, day: 31 }
+      ];
+    }
+
+    function getObservedHolidayDate(year, month, day) {
+      const date = new Date(year, month, day);
+      const weekday = date.getDay();
+
+      if (weekday === 6) {
+        return { month, day: day - 1 };
+      }
+
+      if (weekday === 0) {
+        return { month, day: day + 1 };
+      }
+
+      return null;
+    }
+
+    function getAllHolidays(year) {
+      let holidays = [
+        ...getUSFederalHolidays(year),
+        ...getExtraUSPopularHolidays(year)
+      ];
+
+      const observedHolidays = [];
+
+      holidays.forEach(holiday => {
+        const observed = getObservedHolidayDate(year, holiday.month, holiday.day);
+
+        if (
+          observed &&
+          ["New Year's Day", "Juneteenth", "Independence Day", "Veterans Day", "Christmas Day"].includes(holiday.name)
+        ) {
+          observedHolidays.push({
+            name: holiday.name + " Observed",
+            month: observed.month,
+            day: observed.day
+          });
+        }
+      });
+
+      return [...holidays, ...observedHolidays];
+    }
+
+    function getEventsForDay(year, month, day) {
+      const events = [];
+
+      const holidays = getAllHolidays(year).filter(h =>
+        h.month === month && h.day === day
+      );
+
+      holidays.forEach(h => {
+        events.push({
+          type: "holiday",
+          name: h.name
+        });
+      });
+
+      birthdays.forEach(b => {
+        if (Number(b.month) === month && Number(b.day) === day) {
+          let label = b.name + "'s Birthday";
+
+          if (b.year) {
+            const age = year - Number(b.year);
+            if (age >= 0) {
+              label += " (" + age + ")";
+            }
+          }
+
+          events.push({
+            type: "birthday",
+            name: label
+          });
+        }
+      });
+
+      return events;
+    }
+
+    function renderCalendar() {
+      calendar.innerHTML = "";
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      monthTitle.textContent = monthNames[month] + " " + year;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        const emptyCell = document.createElement("div");
+        emptyCell.className = "day empty";
+        calendar.appendChild(emptyCell);
+      }
+
+      const today = new Date();
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dayCell = document.createElement("div");
+        dayCell.className = "day";
+
+        if (
+          today.getFullYear() === year &&
+          today.getMonth() === month &&
+          today.getDate() === day
+        ) {
+          dayCell.classList.add("today");
+        }
+
+        const dateNumber = document.createElement("div");
+        dateNumber.className = "date-number";
+        dateNumber.textContent = day;
+        dayCell.appendChild(dateNumber);
+
+        const events = getEventsForDay(year, month, day);
+
+        events.forEach(event => {
+          const eventDiv = document.createElement("div");
+          eventDiv.className = "event " + event.type;
+          eventDiv.textContent = event.name;
+          dayCell.appendChild(eventDiv);
+        });
+
+        calendar.appendChild(dayCell);
+      }
+
+      renderBirthdayList();
+    }
+
+    birthdayForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById("birthdayName").value.trim();
+      const month = birthdayMonth.value;
+      const day = birthdayDay.value;
+      const year = document.getElementById("birthdayYear").value;
+
+      if (!name || month === "" || day === "") {
+        alert("Please enter a name, month, and day.");
+        return;
+      }
+
+      birthdays.push({
+        id: Date.now(),
+        name,
+        month,
+        day,
+        year
+      });
+
+      saveBirthdays();
+
+      birthdayForm.reset();
+      renderCalendar();
+    });
+
+    function renderBirthdayList() {
+      birthdayList.innerHTML = "";
+
+      if (birthdays.length === 0) {
+        birthdayList.innerHTML = "<p>No birthdays saved yet.</p>";
+        return;
+      }
+
+      const sortedBirthdays = [...birthdays].sort((a, b) => {
+        if (Number(a.month) !== Number(b.month)) {
+          return Number(a.month) - Number(b.month);
+        }
+        return Number(a.day) - Number(b.day);
+      });
+
+      sortedBirthdays.forEach(b => {
+        const item = document.createElement("div");
+        item.className = "birthday-item";
+
+        let text = `${b.name} — ${monthNames[b.month]} ${b.day}`;
+
+        if (b.year) {
+          text += `, ${b.year}`;
+        }
+
+        const span = document.createElement("span");
+        span.textContent = text;
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "danger small-btn";
+        deleteBtn.textContent = "Delete";
+        deleteBtn.onclick = function() {
+          birthdays = birthdays.filter(x => x.id !== b.id);
+          saveBirthdays();
+          renderCalendar();
+        };
+
+        item.appendChild(span);
+        item.appendChild(deleteBtn);
+        birthdayList.appendChild(item);
+      });
+    }
+
+    renderCalendar();
+  </script>
+</body>
+</html>
